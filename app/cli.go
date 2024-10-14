@@ -28,8 +28,9 @@ func main() {
   // [                ] [ [Punch in/out ]
   // [            Key Bindings          ]
   layout = tview.NewFlex().SetDirection(tview.FlexRow).
-    AddItem(makeTitleBar(), 2, 1, false).
-    AddItem(makeFooter(), 1, 1, false)
+    AddItem(makeTitleBar(), 1, 1, false).
+    AddItem(makeContentPane(), 0, 10, false).
+    AddItem(makeFooter(), 2, 1, false)
 
   setKeyboardShortcuts()
 
@@ -82,6 +83,27 @@ func makeFooter() *tview.TextView {
 
   return footerText
 
+}
+
+// renders the main content pane
+// Flex view that's 2 columns
+// Col 1 = granular/detail time view
+// Col 2 = 2 x Rows:
+//  Row1 = summary view
+//  Row2 = punch in/out view
+func makeContentPane() *tview.Flex {
+
+  detailView := tview.NewBox().SetTitle("Time Card").SetBorder(true)
+  summaryView := tview.NewBox().SetTitle("Summary").SetBorder(true)
+  punchInOut := tview.NewBox().SetTitle("Punch In/Out").SetBorder(true)
+
+  flex := tview.NewFlex().
+    AddItem(detailView, 0, 4, false).
+    AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+      AddItem(summaryView, 0, 1, false).
+      AddItem(punchInOut, 10, 1, false), 0, 1, false)
+    
+  return flex
 }
 
 // modal pop up
