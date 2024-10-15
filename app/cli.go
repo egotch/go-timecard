@@ -15,6 +15,7 @@ var (
 	layout *tview.Flex
 
 	timeDetailPane *TimeDetailPane
+	statusBar      *StatusBar
 )
 
 func main() {
@@ -29,7 +30,7 @@ func main() {
 	layout = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(makeTitleBar(), 1, 1, false).
 		AddItem(makeContentPane(), 0, 10, false).
-		AddItem(makeFooter(), 2, 1, false)
+		AddItem(prepareStatusBar(app), 1, 1, false)
 
 	setKeyboardShortcuts()
 
@@ -71,15 +72,6 @@ func makeTitleBar() *tview.TextView {
 	titleText := tview.NewTextView().SetText("[lime::b]Go TimeCard [::-]- Terminal Time Card Manager!").SetDynamicColors(true)
 
 	return titleText
-}
-
-// renders the application's footer
-func makeFooter() *tview.TextView {
-
-	footerText := tview.NewTextView().SetText("(q)-quit; (h)-help; (a)-HelloWorld!;").SetDynamicColors(true)
-
-	return footerText
-
 }
 
 // renders the main content pane

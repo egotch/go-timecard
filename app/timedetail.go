@@ -31,7 +31,7 @@ func NewTimeDetailPane() *TimeDetailPane {
 	pane.newTimeItem.SetDoneFunc(func(key tcell.Key) {
 		switch key {
 		case tcell.KeyEnter:
-			fmt.Println("Add a new time log item here")
+			pane.addNewTimeEntry()
 		case tcell.KeyEsc:
 			app.SetFocus(timeDetailPane)
 		}
@@ -51,5 +51,14 @@ func NewTimeDetailPane() *TimeDetailPane {
 }
 
 // struct method for adding new time entry
+func (pane *TimeDetailPane) addNewTimeEntry() {
+
+	entry := pane.newTimeItem.GetText()
+
+	statusBar.showForSeconds(fmt.Sprintf("[yellow::]Time entry %s added!", entry), 10)
+	// pane.addProjectToList(len(pane.projects)-1, true)
+	// pane.newProject.SetText("")
+
+}
 
 // struct method for loading the items (see loadListItems on geek-life)
