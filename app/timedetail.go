@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
+	"unicode"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
+  "github.com/egotch/go-timecard/model"
 	"github.com/egotch/go-timecard/utils"
 )
 
 type TimeDetailPane struct {
 	*tview.Flex
+  timeEntries       []model.TimeEntry
 	list               *tview.List
 	newTimeItem        *tview.InputField
 	timeDetailStarting int // the index in list where time entries start
@@ -33,6 +36,7 @@ func NewTimeDetailPane() *TimeDetailPane {
 		case tcell.KeyEnter:
 			pane.addNewTimeEntry()
 		case tcell.KeyEsc:
+      pane.newTimeItem.SetText("")
 			app.SetFocus(timeDetailPane)
 		}
 
@@ -42,7 +46,7 @@ func NewTimeDetailPane() *TimeDetailPane {
 		AddItem(pane.newTimeItem, 1, 0, false)
 
 	// set up the pane (Boarder = true, give it a title)
-	pane.SetBorder(true).SetTitle("[::u]T[::-]ime Entry")
+	pane.SetBorder(true).SetTitle(" [::u]T[::-]ime Entry ")
 
 	// reload the pane
 	//pane.loadListItems(false)
@@ -53,12 +57,48 @@ func NewTimeDetailPane() *TimeDetailPane {
 // struct method for adding new time entry
 func (pane *TimeDetailPane) addNewTimeEntry() {
 
-	entry := pane.newTimeItem.GetText()
+  var entry model.TimeEntry
 
-	statusBar.showForSeconds(fmt.Sprintf("[yellow::]Time entry %s added!", entry), 10)
-	// pane.addProjectToList(len(pane.projects)-1, true)
-	// pane.newProject.SetText("")
+	entry.Description = pane.newTimeItem.GetText()
+
+	statusBar.showForSeconds(fmt.Sprintf("[yellow::]Time entry %s added!", entry.Description), 10)
+  pane.timeEntries = append(pane.timeEntries, entry)
+	pane.addTimeEntryToList(len(pane.timeEntries)-1, true)
+	pane.newTimeItem.SetText("")
 
 }
 
-// struct method for loading the items (see loadListItems on geek-life)
+func (pane *TimeDetailPane) addTimeEntryToList(i int, selectItem bool) {
+
+  pane.list.AddItem("- "+pane.timeEntries[i].Description, "", 0, nil)  
+
+  if selectItem {
+    fmt.Println("hello")
+    // pane.list.SetCurrentItem(-1)
+  }
+
+}
+
+
+// Keybindings for time detail pane
+// 'n' -> go to newTimeItem pane
+func (pane *TimeDetailPane) handlKeyBindings(event *tcell.EventKey) *tcell.EventKey {
+
+	switch unicode.ToLower(event.Rune()) {
+
+	case 'n':
+		app.SetFocus(pane.newTimeItem)
+		return nil
+
+  case 'j':
+    pane.list.SetCurrentItem(pane.list.GetCurrentItem() + 1)
+    return nil
+
+  case 'k':
+    pane.list.SetCurrentItem(pane.list.GetCurrentItem() - 1)
+    return nil
+
+	}
+
+	return event
+}
