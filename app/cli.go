@@ -60,6 +60,16 @@ func setKeyboardShortcuts() *tview.Application {
 		case 'q':
 			AskYesNo("Exit Application?", app.Stop)
 			return nil
+
+		case 't':
+			app.SetFocus(timeDetailPane)
+			return nil
+
+		}
+
+		switch {
+		case timeDetailPane.HasFocus():
+			event = timeDetailPane.handlKeyBindings(event)
 		}
 
 		return event
