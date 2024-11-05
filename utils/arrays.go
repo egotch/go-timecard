@@ -1,6 +1,11 @@
 package utils
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
+)
 
 // Checks if passed in value is in the array indicatd
 // Returns true/false depending on result
@@ -25,4 +30,13 @@ func AtArrayPosition(val interface{}, array interface{}) (index int) {
 	}
 
 	return
+}
+
+func MakeLightTextInput(placeholderTxt string) *tview.InputField {
+
+	return tview.NewInputField().
+		SetPlaceholder(placeholderTxt).
+		SetPlaceholderTextColor(tcell.ColorDarkViolet).
+		SetFieldTextColor(tcell.ColorMidnightBlue).
+		SetFieldBackgroundColor(tcell.ColorLightSteelBlue)
 }

@@ -7,36 +7,36 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-  "github.com/egotch/go-timecard/utils"
+	"github.com/egotch/go-timecard/utils"
 )
 
 var (
-  
-  app *tview.Application
-  layout *tview.Flex
+	app    *tview.Application
+	layout *tview.Flex
 
+	timeDetailPane *TimeDetailPane
+	statusBar      *StatusBar
 )
-
 
 func main() {
 
-  app = tview.NewApplication()
+	app = tview.NewApplication()
 
-  // Set up the app layout
-  // [             Title Bar            ]
-  // [Granular Details] [ [Summary]     ]
-  // [                ] [ [Punch in/out ]
-  // [            Key Bindings          ]
-  layout = tview.NewFlex().SetDirection(tview.FlexRow).
-    AddItem(makeTitleBar(), 1, 1, false).
-    AddItem(makeContentPane(), 0, 10, false).
-    AddItem(makeFooter(), 2, 1, false)
+	// Set up the app layout
+	// [             Title Bar            ]
+	// [Granular Details] [ [Summary]     ]
+	// [                ] [ [Punch in/out ]
+	// [            Key Bindings          ]
+	layout = tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(makeTitleBar(), 1, 1, false).
+		AddItem(makeContentPane(), 0, 10, false).
+		AddItem(prepareStatusBar(app), 1, 1, false)
 
-  setKeyboardShortcuts()
+	setKeyboardShortcuts()
 
-  if err := app.SetRoot(layout, true).EnableMouse(true).Run(); err != nil {
-    panic(err)
-  }
+	if err := app.SetRoot(layout, true).EnableMouse(true).Run(); err != nil {
+		panic(err)
+	}
 }
 
 func ignoreKeyEvt() bool {
@@ -50,60 +50,61 @@ func ignoreKeyEvt() bool {
 // a - display a "hello world" modal
 func setKeyboardShortcuts() *tview.Application {
 
-  e := app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-    if ignoreKeyEvt() {
-      return event
-    }
+	e := app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if ignoreKeyEvt() {
+			return event
+		}
 
-    // Global shortcuts
-    switch unicode.ToLower(event.Rune()) {
-    case 'q':
-      AskYesNo("Exit Application?", app.Stop)
-      return nil
-    }
+		// Global shortcuts
+		switch unicode.ToLower(event.Rune()) {
+		case 'q':
+			AskYesNo("Exit Application?", app.Stop)
+			return nil
 
+		case 't':
+			app.SetFocus(timeDetailPane)
+			return nil
 
+		}
 
-    return event
-  })
-  return e 
+		switch {
+		case timeDetailPane.HasFocus():
+			event = timeDetailPane.handlKeyBindings(event)
+		}
+
+		return event
+	})
+	return e
 }
 
 // renders titlebar TextView
 func makeTitleBar() *tview.TextView {
-  titleText := tview.NewTextView().SetText("[lime::b]Go TimeCard [::-]- Terminal Time Card Manager!").SetDynamicColors(true)
+	titleText := tview.NewTextView().SetText("[lime::b]Go TimeCard [::-]- Terminal Time Card Manager!").SetDynamicColors(true)
 
-  return titleText
-}
-
-// renders the application's footer
-func makeFooter() *tview.TextView {
-
-  footerText := tview.NewTextView().SetText("(q)-quit; (h)-help; (a)-HelloWorld!;").SetDynamicColors(true)
-
-  return footerText
-
+	return titleText
 }
 
 // renders the main content pane
 // Flex view that's 2 columns
 // Col 1 = granular/detail time view
 // Col 2 = 2 x Rows:
-//  Row1 = summary view
-//  Row2 = punch in/out view
+//
+//	Row1 = summary view
+//	Row2 = punch in/out view
 func makeContentPane() *tview.Flex {
 
-  detailView := tview.NewBox().SetTitle("Time Card").SetBorder(true)
-  summaryView := tview.NewBox().SetTitle("Summary").SetBorder(true)
-  punchInOut := tview.NewBox().SetTitle("Punch In/Out").SetBorder(true)
+	// detailView := tview.NewBox().SetTitle("Time Card").SetBorder(true)
+	timeDetailPane = NewTimeDetailPane()
+	summaryView := tview.NewBox().SetTitle("Summary").SetBorder(true)
+	punchInOut := tview.NewBox().SetTitle("Punch In/Out").SetBorder(true)
 
-  flex := tview.NewFlex().
-    AddItem(detailView, 0, 4, false).
-    AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
-      AddItem(summaryView, 0, 1, false).
-      AddItem(punchInOut, 10, 1, false), 0, 1, false)
-    
-  return flex
+	flex := tview.NewFlex().
+		AddItem(timeDetailPane, 0, 4, false).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(summaryView, 0, 1, false).
+			AddItem(punchInOut, 10, 1, false), 0, 1, false)
+
+	return flex
 }
 
 // modal pop up
@@ -114,22 +115,21 @@ func makeContentPane() *tview.Flex {
 // if "no" is selected the modal goes away
 func AskYesNo(text string, f func()) {
 
-  activePane := app.GetFocus()
-  modal := tview.NewModal().
-    SetText(text).
-    AddButtons([]string {"Yes", "No"}).
-    SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-      if buttonLabel == "Yes" {
-        f()
-      }
-      app.SetRoot(layout, true).EnableMouse(true)
-      app.SetFocus(activePane)
-    })
+	activePane := app.GetFocus()
+	modal := tview.NewModal().
+		SetText(text).
+		AddButtons([]string{"Yes", "No"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			if buttonLabel == "Yes" {
+				f()
+			}
+			app.SetRoot(layout, true).EnableMouse(true)
+			app.SetFocus(activePane)
+		})
 
-  pages := tview.NewPages().
-    AddPage("background", layout, true, true).
-    AddPage("modal", modal, true, true)
+	pages := tview.NewPages().
+		AddPage("background", layout, true, true).
+		AddPage("modal", modal, true, true)
 
-  _ = app.SetRoot(pages, true).EnableMouse(true)
+	_ = app.SetRoot(pages, true).EnableMouse(true)
 }
-
