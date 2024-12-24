@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"reflect"
 	"unicode"
 
@@ -10,7 +11,11 @@ import (
 	"github.com/egotch/go-timecard/utils"
 )
 
+// globals
 var (
+  Logger *log.Logger
+  DEBUG *log.Logger
+
 	app    *tview.Application
 	layout *tview.Flex
 
@@ -18,15 +23,21 @@ var (
 	statusBar      *StatusBar
 )
 
+func init() {
+
+  // init loggers
+  Logger, DEBUG = utils.InitLog()
+
+  Logger.Println("Logging initialized")
+
+}
+
 func main() {
 
+
+  Logger.Println("Starting appliation")
 	app = tview.NewApplication()
 
-	// Set up the app layout
-	// [             Title Bar            ]
-	// [Granular Details] [ [Summary]     ]
-	// [                ] [ [Punch in/out ]
-	// [            Key Bindings          ]
 	layout = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(makeTitleBar(), 1, 1, false).
 		AddItem(makeContentPane(), 0, 10, false).
@@ -35,7 +46,7 @@ func main() {
 	setKeyboardShortcuts()
 
 	if err := app.SetRoot(layout, true).EnableMouse(true).Run(); err != nil {
-		panic(err)
+		Logger.Panic(err)
 	}
 }
 
@@ -45,11 +56,11 @@ func ignoreKeyEvt() bool {
 }
 
 // Set custom keybindings for the application
+//
 // h - display help modal popup
 // q - quit - will display a "Do you want to Exit?" questionaire
 // a - display a "hello world" modal
 func setKeyboardShortcuts() *tview.Application {
-
 	e := app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if ignoreKeyEvt() {
 			return event
@@ -67,6 +78,7 @@ func setKeyboardShortcuts() *tview.Application {
 
 		}
 
+    // specific pane key bindings
 		switch {
 		case timeDetailPane.HasFocus():
 			event = timeDetailPane.handlKeyBindings(event)

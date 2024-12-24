@@ -63,7 +63,7 @@ func (pane *TimeDetailPane) addNewTimeEntry() {
 
 	statusBar.showForSeconds(fmt.Sprintf("[yellow::]Time entry %s added!", entry.Description), 10)
   pane.timeEntries = append(pane.timeEntries, entry)
-	pane.addTimeEntryToList(len(pane.timeEntries)-1, true)
+  pane.addTimeEntryToList(len(pane.timeEntries)-1, true)
 	pane.newTimeItem.SetText("")
 
 }
